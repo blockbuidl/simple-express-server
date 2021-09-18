@@ -33,7 +33,7 @@ var ingredients = [
 ];
 
 
-app.get('/ingredients', function(req, res) {
+app.get('/api', function(req, res) {
     console.log("GET From SERVER");
     res.send(ingredients);
 });
