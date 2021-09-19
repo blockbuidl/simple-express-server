@@ -44,23 +44,34 @@ app.use(bodyParser.urlencoded({extended: false}));
 
 app.get('/api', (req, res) => {
 
-    var ids = req.query.ids
+    var query_ids = req.query.ids
 
-    var testme = "1";
-    web3.eth.call({
-      to: "0xa1364d81d86e88cfD018CCa4ac239A997dc96F31",
-      data: iface_abiRarityLibrary.encodeFunctionData("summoner_full", [1290673])
-  }, "latest", function (err, result) {
-//      console.log(result)
-      var xxxxxxx = iface_abiRarityLibrary.decodeFunctionResult("summoner_full", result);
-      console.log(xxxxxxx.toString())
+    if (req.query.ids === undefined){
+        
+        res.send("-1");
 
-      var allFields = (xxxxxxx.toString()).split(",")
+    }
+    else {
+        var ids_array = query_ids.split(","); 
+            web3.eth.call({
+            to: "0xa1364d81d86e88cfD018CCa4ac239A997dc96F31",
+            data: iface_abiRarityLibrary.encodeFunctionData("summoners_full", [ids_array])
+        }, "latest", function (err, result) {
+        //      console.log(result)
+            var fullData = iface_abiRarityLibrary.decodeFunctionResult("summoners_full", result);
+            console.log(fullData.toString())
 
-      res.send({allFields});
-  })
+            var allFields = (fullData.toString()).split(",")
+            var returnThis = []
+            for (i=0;i<fullData.length;i++){
+                returnThis[i] = fullData[i].toString()
+            }
 
-});
+            res.send({allFields});
+        })
+    }
+
+    });
 
 
 app.listen(6069);
