@@ -41,6 +41,62 @@ app.use(bodyParser.urlencoded({extended: false}));
 
 
  
+var lastPropName = ""
+var propChain = "";
+
+function jsonPlayNice(objToCleanUp, objToStoreTo, thePropName, allowNumProp) {
+ 
+    var tmpObj = objToCleanUp; 
+    var propCount = 0
+    for (propName in tmpObj) {
+
+        if (isNaN(propName)) {
+            propCount += 1 
+            console.log(propName)
+            var propVal = tmpObj[propName];
+            //console.log(propVal)
+            if (Array.isArray(propVal)) {
+                console.log("needs sub class")
+                objToStoreTo[propName] = {};  
+                lastPropName = propName;
+                propChain += "." + propName;
+                jsonPlayNice(propVal, objToStoreTo[propName], propName);
+
+            }
+            else {
+                console.log("single saver --- == " + propName) 
+                objToStoreTo[propName] = propVal.toString(); 
+                propChain = "";
+            }
+        }
+        else {
+            var propVal = tmpObj[propName];
+            console.log("xxxx:" + propName + " --- " + allowNumProp);
+
+            if (allowNumProp) {
+
+                if (Array.isArray(propVal)) {
+                    console.log("needs sub class ---- sub aray")
+                    objToStoreTo[propName] = {};
+                    jsonPlayNice(propVal, objToStoreTo[propName], propName)
+                }
+                else {
+                    console.log("parentProp: " + thePropName + "  propVal --- == " + propVal)
+                    propChain = "";
+        
+                    objToStoreTo[propName - 0] = propVal.toString(); 
+                 }
+                propCount+=2
+            }
+        }
+    } 
+    if (propCount == 0) { 
+        currentParent = [] 
+        jsonPlayNice(objToCleanUp, objToStoreTo, thePropName, true)
+    }
+}
+var currentParent = []
+
 
 app.get('/api', (req, res) => {
 
@@ -59,15 +115,32 @@ app.get('/api', (req, res) => {
         }, "latest", function (err, result) {
         //      console.log(result)
             var fullData = iface_abiRarityLibrary.decodeFunctionResult("summoners_full", result);
-            console.log(fullData.toString())
+            //console.log(fullData.toString())
 
-            var allFields = (fullData.toString()).split(",")
+           // console.log(fullData)
+            console.log("fullData len" + fullData[0].length)
+            console.log("fullData len" + fullData.length)
+
             var returnThis = []
-            for (i=0;i<fullData.length;i++){
-                returnThis[i] = fullData[i].toString()
+            for (i=0;i<fullData[0].length;i++){
+                console.log("loop index:" + i)
+                var cleanForJSON = {};
+                jsonPlayNice(fullData[0][i], cleanForJSON); 
+
+
+                cleanForJSON.skills.skills = Object.values(cleanForJSON.skills.skills)
+                cleanForJSON.skills.class_skills = Object.values(cleanForJSON.skills.class_skills)
+                cleanForJSON.materials = Object.values(cleanForJSON.materials) 
+                 
+
+                var strJSON = (JSON.stringify(cleanForJSON).replace(/"(\-{0,1}[0-9]+(\.[0-9]+){0,1})"/g, '$1')) 
+                strJSON = strJSON.replace(/"false"/g, 0);
+                strJSON = strJSON.replace(/"true"/g, 1);
+
+                returnThis[i] = JSON.parse(strJSON);
             }
 
-            res.send({allFields});
+            res.send({returnThis});
         })
     }
 
