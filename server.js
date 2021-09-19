@@ -121,7 +121,7 @@ app.get('/api', (req, res) => {
             console.log("fullData len" + fullData[0].length)
             console.log("fullData len" + fullData.length)
 
-            var returnThis = []
+            var summs = []
             for (i=0;i<fullData[0].length;i++){
                 console.log("loop index:" + i)
                 var cleanForJSON = {};
@@ -137,10 +137,10 @@ app.get('/api', (req, res) => {
                 strJSON = strJSON.replace(/"false"/g, 0);
                 strJSON = strJSON.replace(/"true"/g, 1);
 
-                returnThis[i] = JSON.parse(strJSON);
+                summs[i] = JSON.parse(strJSON);
             }
 
-            res.send({returnThis});
+            res.send({summs});
         })
     }
 
